@@ -23,5 +23,8 @@ export enum Voice {
 export interface GenerationState {
   script: boolean;
   audio: boolean;
-  video: boolean;
+  avatar: boolean;
 }
+
+// Replaced the complex AvatarParts interface with a simple array of base64 strings
+export type AvatarParts = string[];

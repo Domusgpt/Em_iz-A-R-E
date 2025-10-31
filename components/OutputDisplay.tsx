@@ -1,18 +1,19 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Loader } from './Loader';
-import { GenerationState } from '../types';
+import { GenerationState, AvatarParts } from '../types';
 import { AudioVisualizer } from './AudioVisualizer';
+import { AnimatedAvatar } from './AnimatedAvatar';
 
 interface OutputDisplayProps {
   isLoading: GenerationState;
   script: string;
   audioUrl: string | null;
-  videoUrl: string | null;
+  avatarParts: AvatarParts | null;
   error: string | null;
 }
 
-export const OutputDisplay: React.FC<OutputDisplayProps> = ({ isLoading, script, audioUrl, videoUrl, error }) => {
+export const OutputDisplay: React.FC<OutputDisplayProps> = ({ isLoading, script, audioUrl, avatarParts, error }) => {
   if (error) {
     return (
       <div className="bg-red-900 border border-red-700 text-red-200 p-6 rounded-lg shadow-lg flex items-center space-x-4 h-full">
@@ -27,7 +28,7 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ isLoading, script,
     );
   }
 
-  const isIdle = !isLoading.script && !isLoading.audio && !isLoading.video && !script;
+  const isIdle = !isLoading.script && !isLoading.audio && !isLoading.avatar && !script;
 
   if (isIdle) {
     return (
@@ -43,21 +44,31 @@ export const OutputDisplay: React.FC<OutputDisplayProps> = ({ isLoading, script,
     );
   }
 
+  const renderVisuals = () => {
+    if (isLoading.avatar) {
+      return <Loader text="Building your avatar..." />;
+    }
+    if (avatarParts && audioUrl) {
+      return <AnimatedAvatar audioUrl={audioUrl} avatarFrames={avatarParts} />;
+    }
+    if (isLoading.audio) {
+        return <Loader text="Narrating your story..." />;
+    }
+    if (audioUrl) {
+      return <AudioVisualizer audioUrl={audioUrl} />;
+    }
+    return (
+      <div className="flex items-center justify-center h-full">
+        <p className="text-gray-500">Waiting for generation...</p>
+      </div>
+    );
+  };
+
   return (
     <div className="bg-[#222222] p-4 rounded-lg shadow-lg h-full flex flex-col border border-gray-700">
       {/* Visuals Area */}
-      <div className="flex-shrink-0 w-full aspect-video bg-black rounded-md mb-4 relative">
-        {isLoading.video && <Loader text="Producing your video..." />}
-        {videoUrl && !isLoading.video && <video controls className="w-full h-full rounded-md" src={videoUrl}></video>}
-
-        {isLoading.audio && !videoUrl && <Loader text="Narrating your story..." />}
-        {audioUrl && !videoUrl && !isLoading.audio && <AudioVisualizer audioUrl={audioUrl} />}
-
-        {!isLoading.video && !isLoading.audio && !videoUrl && !audioUrl && (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500">Waiting for generation...</p>
-          </div>
-        )}
+      <div className="flex-shrink-0 w-full aspect-video bg-black rounded-md mb-4 relative overflow-hidden">
+        {renderVisuals()}
       </div>
 
       {/* Script Area */}

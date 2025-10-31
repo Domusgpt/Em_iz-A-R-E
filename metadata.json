@@ -1,5 +1,7 @@
 {
   "name": "M-iZ-A-R-E",
   "description": "An emissary for your professional self. M-iZ-A-R-E transforms your CV into a captivating, minimalist audio-visual experience, using AI to craft a compelling narrative and generating hypnotic, artful visuals that sync with your story.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

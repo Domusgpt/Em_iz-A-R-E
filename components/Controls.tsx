@@ -9,8 +9,6 @@ interface ControlsProps {
   setStyle: (style: PresentationStyle) => void;
   voice: string;
   setVoice: (voice: string) => void;
-  generateVideo: boolean;
-  setGenerateVideo: (generate: boolean) => void;
   onGenerate: () => void;
   isLoading: GenerationState;
 }
@@ -36,12 +34,10 @@ export const Controls: React.FC<ControlsProps> = ({
   setStyle,
   voice,
   setVoice,
-  generateVideo,
-  setGenerateVideo,
   onGenerate,
   isLoading
 }) => {
-  const isGenerating = isLoading.script || isLoading.audio || isLoading.video;
+  const isGenerating = isLoading.script || isLoading.audio || isLoading.avatar;
 
   const voiceMap: { [key in Voice]: string } = {
     [Voice.KORE]: "Kore",
@@ -71,21 +67,6 @@ export const Controls: React.FC<ControlsProps> = ({
           {Object.entries(voiceMap).map(([key, value]) => <option key={value} value={value}>{key}</option>)}
         </Select>
       </ControlWrapper>
-
-      <div className="flex items-center mt-4 mb-6">
-          <input
-            id="video-checkbox"
-            type="checkbox"
-            checked={generateVideo}
-            onChange={(e) => setGenerateVideo(e.target.checked)}
-            disabled={isGenerating}
-            className="h-4 w-4 rounded border-gray-500 bg-gray-700 text-red-600 focus:ring-red-500"
-          />
-          <label htmlFor="video-checkbox" className="ml-2 block text-sm text-gray-300">
-            Generate accompanying video (optional)
-          </label>
-        </div>
-
 
       <div className="mt-8">
         <button

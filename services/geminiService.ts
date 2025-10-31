@@ -1,10 +1,9 @@
-
-import { GoogleGenAI, Modality } from "@google/genai";
+import { GoogleGenAI, Modality, GenerateContentResponse } from "@google/genai";
 import { Tone, PresentationStyle } from '../types';
 
 const SCRIPT_MODEL = 'gemini-2.5-pro';
 const TTS_MODEL = 'gemini-2.5-flash-preview-tts';
-const VIDEO_MODEL = 'veo-3.1-fast-generate-preview';
+const IMAGE_MODEL = 'gemini-2.5-flash-image';
 
 const getAiClient = () => {
     if (!process.env.API_KEY) {
@@ -74,44 +73,75 @@ export const generateAudio = async (
     }
 };
 
-export const generateVideo = async (): Promise<string> => {
-    // Re-instantiate the client to ensure the latest key is used.
+const generateSingleVariation = async (
+    ai: GoogleGenAI,
+    imagePart: { inlineData: { mimeType: string; data: string } },
+    prompt: string
+): Promise<string> => {
+    const textPart = { text: prompt };
+    
+    const response: GenerateContentResponse = await ai.models.generateContent({
+        model: IMAGE_MODEL,
+        contents: { parts: [imagePart, textPart] },
+        config: {
+            responseModalities: [Modality.IMAGE],
+        },
+    });
+
+    for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData) {
+            return `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+        }
+    }
+    throw new Error(`AI failed to return a valid image for prompt: "${prompt}"`);
+};
+
+
+export const generateAvatarParts = async (
+    base64Image: string
+): Promise<string[]> => {
     const ai = getAiClient();
-    const prompt = "An abstract, professional, and elegant motion graphics background. Use a corporate color palette of dark slate blue, charcoal gray, and a touch of metallic gold. The animation should be subtle, slow-moving, and not distracting, suitable for a professional presentation. High-quality 1080p cinematic rendering.";
+    const [header, data] = base64Image.split(',');
+    const mimeType = header.match(/:(.*?);/)?.[1] || 'image/png';
+
+    const imagePart = {
+        inlineData: {
+            mimeType,
+            data,
+        },
+    };
+
+    const basePrompt = `From the provided oval-cropped headshot, generate a new image of the person's face. The new image must perfectly match the original's art style, lighting, oval crop, and transparent background. The only change should be the expression. The person should now have [EXPRESSION]. Only return the final image.`;
+
+    // Prompts for a 10-frame South Park-style animation (A-J)
+    // Frame A is the original image.
+    const expressions = [
+        "a closed mouth, but with the head tilted slightly to the left.", // Frame B
+        "an open mouth, as if saying 'ah'.", // Frame C
+        "an open mouth, as if saying 'oh'.", // Frame D
+        "an open mouth, as if saying 'ee'.", // Frame E
+        "lips together, as if saying 'm'.", // Frame F
+        "a wide open mouth, as if shouting.", // Frame G
+        "lips pursed, as if saying 'oo'.", // Frame H
+        "showing teeth, as if making an 'f' sound.", // Frame I
+        "a tongue sticking out slightly.", // Frame J
+    ];
 
     try {
-        let operation = await ai.models.generateVideos({
-            model: VIDEO_MODEL,
-            prompt: prompt,
-            config: {
-                numberOfVideos: 1,
-                resolution: '1080p',
-                aspectRatio: '16:9'
-            }
+        const variationPromises = expressions.map(expression => {
+            const prompt = basePrompt.replace('[EXPRESSION]', expression);
+            return generateSingleVariation(ai, imagePart, prompt);
         });
-
-        while (!operation.done) {
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            operation = await ai.operations.getVideosOperation({ operation: operation });
-        }
-
-        const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
-        if (!downloadLink) {
-            throw new Error("Video generation completed but no download link was found.");
-        }
         
-        const response = await fetch(`${downloadLink}&key=${process.env.API_KEY}`);
-        if (!response.ok) {
-            throw new Error(`Failed to download video file: ${response.statusText}`);
-        }
-        const videoBlob = await response.blob();
-        return URL.createObjectURL(videoBlob);
+        const generatedVariations = await Promise.all(variationPromises);
 
-    } catch (error) {
-        console.error("Error generating video:", error);
-        if (error instanceof Error && error.message.includes("Requested entity was not found")) {
-            throw new Error("Video generation failed. Your API key might be invalid or missing permissions. Please select a valid key.");
+        if (generatedVariations.some(img => !img) || generatedVariations.length !== 9) {
+            throw new Error("AI failed to return one or more required image variations.");
         }
-        throw new Error("Failed to generate video.");
+
+        return [base64Image, ...generatedVariations];
+    } catch (error) {
+        console.error("Error generating avatar parts:", error);
+        throw new Error("Failed to generate avatar variations. The AI may have had trouble processing the image. Try a different photo.");
     }
 };
