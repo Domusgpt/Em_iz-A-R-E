@@ -1,4 +1,3 @@
-
 import React, { useRef } from 'react';
 
 interface AvatarSetupProps {
@@ -52,7 +51,7 @@ export const AvatarSetup: React.FC<AvatarSetupProps> = ({ croppedHeadshot, onIma
             </button>
         )}
       </div>
-       <p className="text-xs text-gray-500 mb-3 -mt-2">Use your camera or upload a photo to create your emissary.</p>
+       <p className="text-xs text-gray-500 mb-3 -mt-2">Give your emissary a face. Or don't. The void is also a valid choice.</p>
        <div className="flex-grow w-full bg-[#1A1A1A] rounded-md border border-gray-600 flex items-center justify-center p-2 min-h-[150px]">
         {croppedHeadshot ? (
             <img src={croppedHeadshot} alt="Cropped headshot preview" className="max-h-full max-w-full object-contain rounded-full" />

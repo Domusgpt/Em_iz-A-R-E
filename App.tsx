@@ -1,15 +1,17 @@
-
-import React, { useState } from 'react';
-import { Tone, PresentationStyle, GenerationState, AvatarParts } from './types';
+import React, { useState, useCallback } from 'react';
+import { Tone, PresentationStyle, GenerationState, AvatarParts, voices, VoiceOption } from './types';
 import { generateScript, generateAudio, generateAvatarParts } from './services/geminiService';
 import { decode, decodeAudioData } from './utils/audioUtils';
 
 import { Header } from './components/Header';
 import { ResumeInput } from './components/ResumeInput';
-import { Controls } from './components/Controls';
 import { OutputDisplay } from './components/OutputDisplay';
 import { AvatarSetup } from './components/AvatarSetup';
 import { ImageCropper } from './components/ImageCropper';
+import { ScriptStudio } from './components/ScriptStudio';
+import { VocalVisuals } from './components/VocalVisuals';
+import { HolographicBorder } from './components/HolographicBorder';
+
 
 // Assume window.webkitAudioContext exists for Safari
 declare global {
@@ -20,57 +22,79 @@ declare global {
 
 const App: React.FC = () => {
   const [resumeText, setResumeText] = useState('');
+  const [script, setScript] = useState('');
   const [tone, setTone] = useState<Tone>(Tone.PROFESSIONAL);
   const [style, setStyle] = useState<PresentationStyle>(PresentationStyle.SUMMARY);
-  const [voice, setVoice] = useState('Zephyr');
+  const [voice, setVoice] = useState<VoiceOption>(voices[0]);
   
   const [imageForCropper, setImageForCropper] = useState<string | null>(null);
   const [videoStreamForCropper, setVideoStreamForCropper] = useState<MediaStream | null>(null);
   const [isCropperOpen, setIsCropperOpen] = useState(false);
   const [croppedHeadshot, setCroppedHeadshot] = useState<string | null>(null);
+  const [avatarParts, setAvatarParts] = useState<AvatarParts | null>(null);
 
   const [isLoading, setIsLoading] = useState<GenerationState>({ script: false, audio: false, avatar: false });
   const [error, setError] = useState<string | null>(null);
 
-  const [generatedScript, setGeneratedScript] = useState('');
   const [generatedAudioUrl, setGeneratedAudioUrl] = useState<string | null>(null);
-  const [avatarParts, setAvatarParts] = useState<AvatarParts | null>(null);
 
-  const handleGeneration = async () => {
+  const handleScriptGeneration = useCallback(async () => {
     if (!resumeText.trim()) {
-      setError("Please paste or upload your resume text before generating.");
+      setError("Please paste or upload your resume text before generating a script.");
+      return;
+    }
+    setError(null);
+    setIsLoading(prev => ({ ...prev, script: true }));
+    try {
+      const generated = await generateScript(resumeText, tone, style);
+      setScript(generated);
+    } catch (err: any) {
+      setError(err.message || 'Failed to generate script.');
+    } finally {
+      setIsLoading(prev => ({ ...prev, script: false }));
+    }
+  }, [resumeText, tone, style]);
+
+  const handleFinalGeneration = async () => {
+    if (!script.trim()) {
+      setError("Please generate or write a script before creating the final presentation.");
       return;
     }
     
     setError(null);
-    setGeneratedScript('');
     setGeneratedAudioUrl(null);
     setAvatarParts(null);
-    setIsLoading({ script: true, audio: false, avatar: false });
+    setIsLoading({ script: false, audio: true, avatar: !!croppedHeadshot });
 
     try {
-      const script = await generateScript(resumeText, tone, style);
-      setGeneratedScript(script);
-      setIsLoading({ script: false, audio: true, avatar: !!croppedHeadshot });
+      // Parallelize audio and avatar generation
+      const promises = [
+          generateAudio(script, voice.id),
+          croppedHeadshot ? generateAvatarParts(croppedHeadshot) : Promise.resolve(null)
+      ];
 
-      const audioPromise = generateAudio(script, voice);
-      const avatarPromise = croppedHeadshot ? generateAvatarParts(croppedHeadshot) : Promise.resolve(null);
+      const [base64Audio, generatedAvatarParts] = await Promise.all(promises);
       
-      const [base64Audio, avatarResult] = await Promise.all([audioPromise, avatarPromise]);
+      if (generatedAvatarParts) {
+        setAvatarParts(generatedAvatarParts as AvatarParts);
+      }
 
       const outputAudioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
-      const audioBytes = decode(base64Audio);
+      const audioBytes = decode(base64Audio as string);
       const audioBuffer = await decodeAudioData(audioBytes, outputAudioContext, 24000, 1);
       
       const wav = audioBufferToWav(audioBuffer);
       const blob = new Blob([wav], { type: 'audio/wav' });
-      setGeneratedAudioUrl(URL.createObjectURL(blob));
+      const newAudioUrl = URL.createObjectURL(blob);
 
-      if (avatarResult) {
-        setAvatarParts(avatarResult);
+      // Clean up old object URL to prevent memory leaks
+      if (generatedAudioUrl) {
+          URL.revokeObjectURL(generatedAudioUrl);
       }
+      setGeneratedAudioUrl(newAudioUrl);
+
     } catch (err: any) {
-      setError(err.message || 'An unknown error occurred.');
+      setError(err.message || 'An unknown error occurred during final generation.');
     } finally {
       setIsLoading({ script: false, audio: false, avatar: false });
     }
@@ -122,63 +146,92 @@ const App: React.FC = () => {
   
   const handleRemoveHeadshot = () => {
       setCroppedHeadshot(null);
-      setAvatarParts(null);
   };
 
-  const isGenerating = isLoading.script || isLoading.audio || isLoading.avatar;
+  const isGenerating = isLoading.script || isLoading.audio;
 
   return (
-    <div className="min-h-screen bg-[#1A1A1A] text-[#F5F5DC] flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 h-full">
-          <div className="flex flex-col gap-6">
-            <div className="flex-grow" style={{minHeight: '300px'}}>
+    <HolographicBorder>
+      <div className="min-h-screen bg-transparent text-[#F5F5DC] flex flex-col">
+        <Header />
+        <main className="flex-grow container mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full">
+            
+            {/* LEFT PANEL: CONTROLS */}
+            <div className="lg:col-span-1 flex flex-col gap-6">
               <ResumeInput 
                 resumeText={resumeText} 
                 setResumeText={setResumeText} 
                 handleFileChange={handleResumeFileChange}
                 disabled={isGenerating} 
               />
-            </div>
-             <AvatarSetup 
-                croppedHeadshot={croppedHeadshot}
-                onImageSelected={handleImageSelected}
-                onCameraSelected={handleCameraSelected}
-                onRemoveImage={handleRemoveHeadshot}
+              <ScriptStudio
+                script={script}
+                setScript={setScript}
+                tone={tone}
+                setTone={setTone}
+                style={style}
+                setStyle={setStyle}
+                onGenerateScript={handleScriptGeneration}
+                isLoading={isLoading.script}
                 disabled={isGenerating}
-                setError={setError}
               />
-            <div>
-              <Controls 
-                tone={tone} setTone={setTone}
-                style={style} setStyle={setStyle}
-                voice={voice} setVoice={setVoice}
-                onGenerate={handleGeneration}
+              <VocalVisuals
+                selectedVoice={voice}
+                onVoiceChange={setVoice}
+                disabled={isGenerating}
+              >
+                  <AvatarSetup 
+                    croppedHeadshot={croppedHeadshot}
+                    onImageSelected={handleImageSelected}
+                    onCameraSelected={handleCameraSelected}
+                    onRemoveImage={handleRemoveHeadshot}
+                    disabled={isGenerating}
+                    setError={setError}
+                  />
+              </VocalVisuals>
+              <div className="mt-auto">
+                  <button
+                      onClick={handleFinalGeneration}
+                      disabled={isGenerating || !script}
+                      className="w-full bg-red-800 text-white font-bold py-4 px-4 rounded-lg hover:bg-red-700 transition-all duration-300 disabled:bg-gray-600 disabled:cursor-not-allowed flex items-center justify-center text-lg"
+                      >
+                      {isLoading.audio || isLoading.avatar ? (
+                          <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Generating Presentation...
+                          </>
+                      ) : (
+                          "Generate Resu-M is R-E"
+                      )}
+                  </button>
+              </div>
+            </div>
+            
+            {/* RIGHT PANEL: OUTPUT */}
+            <div className="lg:col-span-2 min-h-[600px] xl:min-h-0">
+              <OutputDisplay 
                 isLoading={isLoading}
+                audioUrl={generatedAudioUrl}
+                avatarParts={avatarParts}
+                error={error}
               />
             </div>
           </div>
-          <div className="min-h-[600px] xl:min-h-0">
-            <OutputDisplay 
-              isLoading={isLoading}
-              script={generatedScript}
-              audioUrl={generatedAudioUrl}
-              avatarParts={avatarParts}
-              error={error}
+        </main>
+        {isCropperOpen && (
+            <ImageCropper
+                imageSrc={imageForCropper}
+                videoStream={videoStreamForCropper}
+                onCropComplete={handleCropComplete}
+                onClose={handleCloseCropper}
             />
-          </div>
-        </div>
-      </main>
-      {isCropperOpen && (
-          <ImageCropper
-              imageSrc={imageForCropper}
-              videoStream={videoStreamForCropper}
-              onCropComplete={handleCropComplete}
-              onClose={handleCloseCropper}
-          />
-      )}
-    </div>
+        )}
+      </div>
+    </HolographicBorder>
   );
 };
 

@@ -1,19 +1,47 @@
-
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+// @ts-ignore
+import { HolographicVisualizer } from '../visualizers/HolographicVisualizer.js';
 
 export const Header: React.FC = () => {
+  const hologramRef = useRef<any>(null);
+  const animationFrameId = useRef<number>(0);
+
+  useEffect(() => {
+    // Use a try-catch block to handle cases where the canvas might not be found
+    try {
+      hologramRef.current = new HolographicVisualizer('header-hologram', 'accent', 0.3, Math.floor(Math.random() * 30));
+    } catch (error) {
+      console.error("Failed to initialize header visualizer:", error);
+      return;
+    }
+    
+    const animate = () => {
+      if (hologramRef.current && typeof hologramRef.current.render === 'function') {
+        hologramRef.current.render();
+      }
+      animationFrameId.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId.current);
+    };
+  }, []);
+
   return (
-    <header className="bg-[#1A1A1A] shadow-md border-b border-gray-800">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="flex items-center justify-center">
-           <svg width="32" height="32" viewBox="0 0 100 100" className="mr-3 text-[#E53935]">
-            <path d="M50 90 V60 M50 60 L30 40 M50 60 L70 40 M30 40 L20 30 M30 40 L40 30 M70 40 L60 30 M70 40 L80 30" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round"/>
-            <path d="M50 60 L50 30 M50 30 L40 20 M50 30 L60 20" stroke="#F5F5DC" strokeWidth="5" fill="none" strokeLinecap="round"/>
-          </svg>
-          <h1 className="text-2xl sm:text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#F5F5DC] to-[#D4B996]">
-            M'iz A-R-E
-          </h1>
-        </div>
+    <header className="relative text-center py-4 sm:py-6 border-b border-gray-800/50 overflow-hidden">
+      <canvas id="header-hologram" className="absolute inset-0 w-full h-full opacity-50 mix-blend-screen"></canvas>
+      <div className="relative z-10">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-transparent bg-clip-text" style={{
+            backgroundImage: 'linear-gradient(to bottom, #FFFFFF, #BDBDBD)',
+            WebkitBackgroundClip: 'text',
+        }}>
+          Resu-M is R-E
+        </h1>
+        <p className="text-sm text-cyan-400/70 mt-1 tracking-wider font-mono">
+          Your Professional Emissary, Now With More Cosmic Dread
+        </p>
       </div>
     </header>
   );

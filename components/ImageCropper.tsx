@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface ImageCropperProps {
@@ -30,24 +29,22 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, videoStrea
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
 
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    
     const sourceWidth = source instanceof HTMLImageElement ? source.naturalWidth : source.videoWidth;
     const sourceHeight = source instanceof HTMLImageElement ? source.naturalHeight : source.videoHeight;
     
     if (sourceWidth === 0 || sourceHeight === 0) return;
 
+    // Clear and set up overlay
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+    
     const scaledWidth = sourceWidth * zoom;
     const scaledHeight = sourceHeight * zoom;
     
     const sx = (canvasWidth - scaledWidth) / 2 + offset.x;
     const sy = (canvasHeight - scaledHeight) / 2 + offset.y;
 
-    ctx.drawImage(source, sx, sy, scaledWidth, scaledHeight);
-    
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    
+    // Define the oval area
     ctx.save();
     const ovalWidth = canvasWidth * 0.8;
     const ovalHeight = ovalWidth / OVAL_ASPECT_RATIO;
@@ -58,9 +55,19 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, videoStrea
     ctx.ellipse(centerX, centerY, ovalWidth / 2, ovalHeight / 2, 0, 0, 2 * Math.PI);
     ctx.clip();
     
+    // Clear inside the oval and draw the (potentially mirrored) source image
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    ctx.save();
+    if (videoStream) {
+        ctx.scale(-1, 1);
+        ctx.translate(-canvasWidth, 0);
+    }
     ctx.drawImage(source, sx, sy, scaledWidth, scaledHeight);
-    ctx.restore();
+    ctx.restore(); // restore from flip
+
+    ctx.restore(); // restore from clip
     
+    // Draw the oval border and guides
     ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
     ctx.lineWidth = 2;
     ctx.beginPath();
@@ -93,6 +100,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, videoStrea
       const video = document.createElement('video');
       video.srcObject = videoStream;
       video.autoplay = true;
+      video.playsInline = true; // For iOS
       video.onloadeddata = () => {
         sourceRef.current = video;
         draw();
@@ -139,6 +147,13 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, videoStrea
     const ctx = tempCanvas.getContext('2d');
     if (!ctx) return;
     
+    // Draw the final cropped image without the mirror effect
+    ctx.save();
+    if (videoStream) {
+        ctx.scale(-1, 1);
+        ctx.translate(-ovalWidth, 0);
+    }
+    
     ctx.beginPath();
     ctx.ellipse(ovalWidth / 2, ovalHeight / 2, ovalWidth / 2, ovalHeight / 2, 0, 0, 2 * Math.PI);
     ctx.clip();
@@ -150,6 +165,7 @@ export const ImageCropper: React.FC<ImageCropperProps> = ({ imageSrc, videoStrea
     const sy = (canvas.height - scaledHeight) / 2 + offset.y - (canvas.height - ovalHeight) / 2;
     
     ctx.drawImage(source, sx, sy, scaledWidth, scaledHeight);
+    ctx.restore();
     
     onCropComplete(tempCanvas.toDataURL('image/png'));
   };

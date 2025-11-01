@@ -111,20 +111,27 @@ export const generateAvatarParts = async (
         },
     };
 
-    const basePrompt = `From the provided oval-cropped headshot, generate a new image of the person's face. The new image must perfectly match the original's art style, lighting, oval crop, and transparent background. The only change should be the expression. The person should now have [EXPRESSION]. Only return the final image.`;
+    const basePrompt = `You are an expert photo editor. From the provided oval-cropped headshot with a transparent background, generate a new, highly realistic image. The new image must perfectly match the original's oval crop, lighting, and transparent background. Do not change the art style. The ONLY modification should be to the person's expression as described. Only return the final PNG image with no extra text or explanations. The person should now have [EXPRESSION].`;
 
-    // Prompts for a 10-frame South Park-style animation (A-J)
-    // Frame A is the original image.
     const expressions = [
-        "a closed mouth, but with the head tilted slightly to the left.", // Frame B
-        "an open mouth, as if saying 'ah'.", // Frame C
-        "an open mouth, as if saying 'oh'.", // Frame D
-        "an open mouth, as if saying 'ee'.", // Frame E
-        "lips together, as if saying 'm'.", // Frame F
-        "a wide open mouth, as if shouting.", // Frame G
-        "lips pursed, as if saying 'oo'.", // Frame H
-        "showing teeth, as if making an 'f' sound.", // Frame I
-        "a tongue sticking out slightly.", // Frame J
+        // Frame B
+        "a neutral, closed mouth, but with their entire head tilted slightly to their left (from the viewer's perspective, this is a tilt to the right). The tilt should be subtle, about 2-3 degrees.",
+        // Frame C
+        "their jaw dropped for an 'ah' sound. The mouth should be a relaxed oval, with visible space between the teeth. The cheeks should be soft.",
+        // Frame D
+        "their mouth forming a small, round 'o' shape. The lips should be pursed slightly, but not tense. Imagine the start of the word 'oh'.",
+        // Frame E
+        "their mouth in a wide shape for an 'ee' sound. The corners of the mouth are pulled back slightly, and the lips are parted to show the edges of the teeth.",
+        // Frame F
+        "their lips pressed together gently for an 'm' sound. The jaw is closed, and there's slight tension at the corners of the mouth.",
+        // Frame G
+        "their mouth open in a natural, mid-sized oval, as if in the middle of a normal conversation. It's larger than 'ah' but not a full yawn.",
+        // Frame H
+        "their upper teeth gently resting on the center of their lower lip, as if making an 'f' or 'v' sound. The jaw should be slightly ajar.",
+        // Frame I
+        "their lips rounded and pushed forward into a tight 'ooh' sound. The cheeks might be slightly hollowed.",
+        // Frame J
+        "a neutral expression but with the mouth slightly agape, as if taking a brief pause while speaking. The jaw is relaxed and dropped a tiny amount.",
     ];
 
     try {

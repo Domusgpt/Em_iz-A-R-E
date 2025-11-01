@@ -13,17 +13,33 @@ export enum PresentationStyle {
   CAREER_JOURNEY = "Career Journey"
 }
 
-export enum Voice {
-  KORE = "Kore (Male, Deep)",
-  PUCK = "Puck (Male, Youthful)",
-  ZEPHYR = "Zephyr (Female, Warm)",
-  CHARON = "Charon (Female, Professional)"
+export interface VoiceOption {
+  id: string;
+  name: string;
+  description: string;
 }
+
+export const voices: VoiceOption[] = [
+  { id: "Zephyr", name: "Zephyr", description: "Female, Warm & Gentle" },
+  { id: "Kore", name: "Kore", description: "Male, Deep & Authoritative" },
+  { id: "Puck", name: "Puck", description: "Male, Youthful & Energetic" },
+  { id: "Charon", name: "Charon", description: "Female, Professional & Crisp" },
+  { id: "Fenrir", name: "Fenrir", description: "Male, Raspy & Mature" },
+];
+
 
 export interface GenerationState {
   script: boolean;
   audio: boolean;
   avatar: boolean;
+}
+
+export interface AudioData {
+  bass: number;
+  mid: number;
+  high: number;
+  energy: number;
+  rhythm: number;
 }
 
 // Replaced the complex AvatarParts interface with a simple array of base64 strings
