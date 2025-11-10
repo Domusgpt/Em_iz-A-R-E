@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { AvatarParts, AudioData } from '../types';
 
@@ -8,91 +7,145 @@ interface AnimatedAvatarProps {
   audioData: AudioData | null;
 }
 
-// Sequence: A-C-B-D-A-E-B-F-A-G-B-H-A-I-B-J
-const FRAME_SEQUENCE = [0, 2, 1, 3, 0, 4, 1, 5, 0, 6, 1, 7, 0, 8, 1, 9];
-const FRAME_RATE = 15; // Increased for smoother mouth shape changes
-
+/**
+ * Elegant South Park-style animation
+ * Simply splits the face in half at the mouth and animates the jaw
+ * Much more authentic and performant!
+ */
 export const AnimatedAvatar: React.FC<AnimatedAvatarProps> = ({ parts, isPlaying, audioData }) => {
-  const [frameCounter, setFrameCounter] = useState(0);
+  const [mouthOpen, setMouthOpen] = useState(0);
   const animationRef = useRef<number>();
-  const lastFrameTimeRef = useRef(performance.now());
+  const lastUpdateRef = useRef(performance.now());
+
+  // Use the base image (first part) for the avatar
+  const baseImage = parts[0];
 
   useEffect(() => {
-    let animId: number;
-    const animate = (time: number) => {
-      const deltaTime = time - lastFrameTimeRef.current;
-      if (deltaTime > 1000 / FRAME_RATE) {
-        lastFrameTimeRef.current = time;
-        setFrameCounter((prev) => prev + 1);
-      }
-      animId = requestAnimationFrame(animate);
-      animationRef.current = animId;
-    };
-
-    if (isPlaying) {
-      lastFrameTimeRef.current = performance.now(); // Reset timer on play
-      animId = requestAnimationFrame(animate);
-      animationRef.current = animId;
-    } else {
+    if (!isPlaying) {
+      setMouthOpen(0);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
-      setFrameCounter(0); // Reset to first frame when not playing
+      return;
     }
+
+    const animate = (time: number) => {
+      const deltaTime = time - lastUpdateRef.current;
+
+      // Update at ~30fps for smooth but efficient animation
+      if (deltaTime > 33) {
+        lastUpdateRef.current = time;
+
+        if (audioData && audioData.energy > 0.1) {
+          // Audio-reactive mouth opening
+          // Use mid frequencies (voice range) for more accurate sync
+          const energyLevel = Math.min(1, audioData.mid * 2);
+          const targetOpen = energyLevel * 25; // Max 25px jaw drop
+
+          // Smooth interpolation for natural movement
+          setMouthOpen(prev => prev + (targetOpen - prev) * 0.3);
+        } else {
+          // Gentle close when no significant audio
+          setMouthOpen(prev => prev * 0.85);
+        }
+      }
+
+      animationRef.current = requestAnimationFrame(animate);
+    };
+
+    lastUpdateRef.current = performance.now();
+    animationRef.current = requestAnimationFrame(animate);
 
     return () => {
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, audioData]);
 
-  if (!parts || parts.length < 10) {
+  if (!baseImage) {
     return null;
   }
-  
-  const currentSequenceIndex = frameCounter % FRAME_SEQUENCE.length;
-  // Default to frame B (tilted) when paused
-  const currentPartIndex = isPlaying ? FRAME_SEQUENCE[currentSequenceIndex] : 1; 
-  const currentImage = parts[currentPartIndex];
 
-  // Audio-reactive calculations
-  const flap = isPlaying && audioData ? Math.max(0, Math.min(1, audioData.mid * 4.5)) : 0;
-  const sway = isPlaying && audioData && audioData.rhythm > 0.5 ? (Math.sin(frameCounter * 0.6) * 2.5) : 0;
-  const idleSway = isPlaying ? (Math.sin(frameCounter * 0.2) * 1) : 0;
-  const tilt = isPlaying && audioData ? (audioData.rhythm > 0.5 ? -3 : 0) + (Math.sin(frameCounter * 0.35) * 1.5) : -2;
+  // Calculate subtle head movements based on audio
+  const headBob = isPlaying && audioData
+    ? Math.sin(Date.now() * 0.002) * (audioData.energy * 2)
+    : 0;
 
-  const sharedStyle: React.CSSProperties = {
-    backgroundImage: `url(${currentImage})`,
+  const headTilt = isPlaying && audioData && audioData.rhythm > 0.5
+    ? Math.sin(Date.now() * 0.003) * 2
+    : Math.sin(Date.now() * 0.001) * 0.5; // Subtle idle tilt
+
+  const headSway = isPlaying && audioData
+    ? Math.sin(Date.now() * 0.0015) * (audioData.rhythm > 0.5 ? 3 : 1)
+    : 0;
+
+  // Top half of face (everything above the mouth)
+  const topHalfStyle: React.CSSProperties = {
+    backgroundImage: `url(${baseImage})`,
     backgroundSize: 'contain',
     backgroundRepeat: 'no-repeat',
+    backgroundPosition: 'center top',
     position: 'absolute',
     inset: 0,
-    transition: 'transform 80ms ease-out', // Smoother transition
+    clipPath: 'polygon(0 0, 100% 0, 100% 58%, 0 58%)', // Split at mouth line
+    transform: `
+      translate(${headSway}px, ${headBob - mouthOpen * 0.3}px)
+      rotate(${headTilt}deg)
+    `,
+    transformOrigin: 'center 60%',
+    transition: 'transform 50ms ease-out',
+    willChange: 'transform',
   };
 
-  const topStyle: React.CSSProperties = {
-    ...sharedStyle,
-    backgroundPosition: 'center top',
-    clipPath: 'polygon(0 0, 100% 0, 100% 55%, 0 55%)',
-    // Top part moves more, tilts back more dramatically
-    transform: `translate(${sway + idleSway}px, ${-flap * 12}px) rotate(${tilt}deg)`,
-  };
-
-  const bottomStyle: React.CSSProperties = {
-    ...sharedStyle,
+  // Bottom half of face (jaw and below)
+  const bottomHalfStyle: React.CSSProperties = {
+    backgroundImage: `url(${baseImage})`,
+    backgroundSize: 'contain',
+    backgroundRepeat: 'no-repeat',
     backgroundPosition: 'center bottom',
-    clipPath: 'polygon(0 55%, 100% 55%, 100% 100%, 0 100%)',
-    // Bottom part moves less, providing an anchor
-    transform: `translate(${-sway * 0.5}px, ${flap * 2}px) rotate(${-tilt * 0.3}deg)`,
+    position: 'absolute',
+    inset: 0,
+    clipPath: 'polygon(0 58%, 100% 58%, 100% 100%, 0 100%)', // Split at mouth line
+    transform: `
+      translate(${headSway * 0.7}px, ${headBob + mouthOpen}px)
+      rotate(${headTilt * 0.5}deg)
+    `,
+    transformOrigin: 'center 60%',
+    transition: 'transform 50ms ease-out',
+    willChange: 'transform',
   };
 
   return (
     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-      <div className="relative w-48 h-64 md:w-56 md:h-72 lg:w-64 lg:h-80 drop-shadow-2xl">
-        <div style={topStyle}></div>
-        <div style={bottomStyle}></div>
+      <div className="relative w-56 h-72 md:w-64 md:h-80 lg:w-72 lg:h-96 drop-shadow-2xl">
+        {/* Top half - stays more stable */}
+        <div style={topHalfStyle} />
+
+        {/* Bottom half - moves with jaw */}
+        <div style={bottomHalfStyle} />
+
+        {/* Optional: Add a subtle highlight when speaking */}
+        {isPlaying && audioData && audioData.energy > 0.3 && (
+          <div
+            className="absolute inset-0 bg-gradient-radial from-red-500/10 to-transparent rounded-full blur-xl"
+            style={{
+              opacity: audioData.energy * 0.3,
+              transition: 'opacity 100ms ease-out',
+            }}
+          />
+        )}
       </div>
+
+      {/* Debug info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && audioData && (
+        <div className="absolute bottom-4 right-4 bg-black/80 p-3 rounded text-xs font-mono text-green-400">
+          <div>Energy: {audioData.energy.toFixed(2)}</div>
+          <div>Mid: {audioData.mid.toFixed(2)}</div>
+          <div>Jaw: {mouthOpen.toFixed(1)}px</div>
+          <div>Playing: {isPlaying ? 'Yes' : 'No'}</div>
+        </div>
+      )}
     </div>
   );
 };
