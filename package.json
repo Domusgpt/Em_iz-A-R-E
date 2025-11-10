@@ -1,8 +1,9 @@
 {
-  "name": "resu-m-is-r-e",
+  "name": "talkinghead-pro",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "Professional Canadian South Park-style animated avatar platform",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

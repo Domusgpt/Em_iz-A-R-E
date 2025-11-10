@@ -1,7 +1,19 @@
 {
-  "name": "Resu-M is R-E",
-  "description": "An emissary for your professional self. Resu-M is R-E transforms your CV into a captivating, minimalist audio-visual experience, using AI to craft a compelling narrative and generating hypnotic, artful visuals that sync with your story.",
+  "name": "TalkingHead Pro - Canadian Edition",
+  "description": "Your professional animated avatar platform with Canadian charm, eh? Transform resumes, documents, and introductions into engaging South Park-style animated presentations with AI-powered script generation, text-to-speech, and custom avatars. Made with love and maple syrup! 🍁",
+  "version": "1.0.0",
   "requestFramePermissions": [
     "camera"
-  ]
+  ],
+  "features": [
+    "Three operating modes: Resume, Document, Quick Intro",
+    "Canadian South Park-style animation",
+    "AI-powered script generation with multiple tones",
+    "Professional text-to-speech with 5 voice options",
+    "Custom avatar creation from photos",
+    "Audio-reactive animations with lip-sync",
+    "Export audio (video coming soon)",
+    "Friendly Canadian personality throughout"
+  ],
+  "tags": ["animation", "resume", "presentation", "AI", "text-to-speech", "avatar", "Canadian", "South Park", "professional"]
 }
