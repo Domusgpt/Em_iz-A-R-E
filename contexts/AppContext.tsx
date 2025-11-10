@@ -10,7 +10,7 @@ import {
   VoiceOption,
   voices,
   modeConfigs,
-  CANADIAN_PHRASES,
+  UI_PHRASES,
   GenerationState,
   AvatarParts
 } from '../types';
@@ -199,7 +199,7 @@ interface UIContextType {
   showModeSelector: () => void;
   hideModeSelector: () => void;
   setActivePanel: (panel: 'input' | 'preview' | 'export') => void;
-  getRandomCanadianPhrase: (type: keyof typeof CANADIAN_PHRASES) => string;
+  getRandomPhrase: (type: keyof typeof UI_PHRASES) => string;
 }
 
 const UIContext = createContext<UIContextType | undefined>(undefined);
@@ -241,8 +241,8 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     setUI(prev => ({ ...prev, activePanel: panel }));
   }, []);
 
-  const getRandomCanadianPhrase = useCallback((type: keyof typeof CANADIAN_PHRASES) => {
-    const phrases = CANADIAN_PHRASES[type];
+  const getRandomPhrase = useCallback((type: keyof typeof UI_PHRASES) => {
+    const phrases = UI_PHRASES[type];
     return phrases[Math.floor(Math.random() * phrases.length)];
   }, []);
 
@@ -256,7 +256,7 @@ export const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
       showModeSelector,
       hideModeSelector,
       setActivePanel,
-      getRandomCanadianPhrase
+      getRandomPhrase
     }}>
       {children}
     </UIContext.Provider>

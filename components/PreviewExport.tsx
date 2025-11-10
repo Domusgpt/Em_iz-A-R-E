@@ -6,7 +6,7 @@ import { AudioData } from '../types';
 export const PreviewExport: React.FC = () => {
   const { content } = useContent();
   const { avatar } = useAvatar();
-  const { ui, getRandomCanadianPhrase } = useUI();
+  const { ui, getRandomPhrase } = useUI();
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioData, setAudioData] = useState<AudioData | null>(null);
@@ -248,7 +248,7 @@ export const PreviewExport: React.FC = () => {
           </div>
         ) : (
           <div className="text-center text-gray-500">
-            <p className="text-sm">{getRandomCanadianPhrase('encouragement')}</p>
+            <p className="text-sm">{getRandomPhrase('encouragement')}</p>
             <p className="text-xs mt-2">Add content, generate a script, and hit "Generate" to create your presentation!</p>
           </div>
         )}

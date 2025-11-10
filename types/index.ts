@@ -11,7 +11,7 @@ export enum Tone {
   ENTHUSIASTIC = "Enthusiastic & Passionate",
   CONCISE = "Concise & Direct",
   STORYTELLING = "Storytelling & Engaging",
-  FRIENDLY_CANADIAN = "Friendly Canadian (Polite & Warm)"
+  CONVERSATIONAL = "Conversational & Friendly"
 }
 
 export enum PresentationStyle {
@@ -98,42 +98,42 @@ export interface ModeConfig {
   defaultTone: Tone;
   defaultStyle: PresentationStyle;
   maxLength: number;
-  canadianGreeting: string;
+  greeting: string;
 }
 
 export const modeConfigs: Record<AppMode, ModeConfig> = {
   [AppMode.RESUME]: {
     id: AppMode.RESUME,
     name: "Professional Resume",
-    description: "Transform your resume into an engaging video introduction, eh?",
+    description: "Transform your resume into an engaging video introduction",
     icon: "📄",
-    placeholder: "Paste your resume text here, buddy...",
+    placeholder: "Paste your resume text here...",
     defaultTone: Tone.PROFESSIONAL,
     defaultStyle: PresentationStyle.SUMMARY,
     maxLength: 5000,
-    canadianGreeting: "Hey there! Let's make your resume shine, friend!"
+    greeting: "Let's make your resume shine!"
   },
   [AppMode.DOCUMENT]: {
     id: AppMode.DOCUMENT,
     name: "Document Presenter",
-    description: "Turn any document into an animated presentation, don't you know!",
+    description: "Turn any document into an animated presentation",
     icon: "📝",
     placeholder: "Paste any document or content here...",
     defaultTone: Tone.STORYTELLING,
     defaultStyle: PresentationStyle.DOCUMENTARY,
     maxLength: 10000,
-    canadianGreeting: "Alright, let's bring your document to life!"
+    greeting: "Let's bring your document to life!"
   },
   [AppMode.QUICK_INTRO]: {
     id: AppMode.QUICK_INTRO,
     name: "Quick Introduction",
-    description: "Create a fast, professional self-introduction. Beauty, eh?",
+    description: "Create a fast, professional self-introduction",
     icon: "👋",
-    placeholder: "Tell us aboot yourself in a few sentences...",
-    defaultTone: Tone.FRIENDLY_CANADIAN,
+    placeholder: "Tell us about yourself in a few sentences...",
+    defaultTone: Tone.CONVERSATIONAL,
     defaultStyle: PresentationStyle.ELEVATOR_PITCH,
     maxLength: 1000,
-    canadianGreeting: "Hi there, buddy! Let's create your intro!"
+    greeting: "Let's create your intro!"
   }
 };
 
@@ -147,31 +147,31 @@ export const ANIMATION_CONFIG = {
   MOUTH_FLAP_MULTIPLIER: 4.5
 };
 
-// Canadian phrases for personality
-export const CANADIAN_PHRASES = {
+// UI phrases
+export const UI_PHRASES = {
   greetings: [
-    "Hey there, buddy!",
-    "How's it going, eh?",
-    "Good to see you, friend!",
-    "Welcome, don't you know!"
+    "Welcome!",
+    "Let's get started!",
+    "Ready to create?",
+    "Hello there!"
   ],
-  apologies: [
-    "Sorry aboot that, eh?",
-    "Oops! My apologies, friend.",
-    "Pardon me, let's try that again!",
-    "Sorry, that's on me, buddy!"
+  errors: [
+    "Something went wrong.",
+    "Oops! Let's try that again.",
+    "Please check and retry.",
+    "An error occurred."
   ],
   success: [
-    "Beauty! You're all set!",
-    "Perfect, eh? Looking good!",
-    "That's the way, bud!",
-    "Outstanding work, friend!"
+    "Success! You're all set!",
+    "Perfect! Looking good!",
+    "Great work!",
+    "All done!"
   ],
   encouragement: [
-    "You've got this, buddy!",
-    "Looking great so far, eh?",
-    "Keep it up, friend!",
-    "Doing wonderful, don't you know!"
+    "You've got this!",
+    "Looking great!",
+    "Keep going!",
+    "Nice progress!"
   ]
 };
 

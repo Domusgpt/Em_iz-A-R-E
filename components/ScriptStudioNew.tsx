@@ -6,14 +6,14 @@ import { generateScript } from '../services/geminiService';
 export const ScriptStudioNew: React.FC = () => {
   const { settings } = useApp();
   const { content, setScript, setTone, setStyle } = useContent();
-  const { ui, setLoading, setError, getRandomCanadianPhrase } = useUI();
+  const { ui, setLoading, setError, getRandomPhrase } = useUI();
 
   const config = modeConfigs[settings.mode];
   const isGenerating = ui.isLoading.script || ui.isLoading.audio || ui.isLoading.avatar;
 
   const handleGenerateScript = async () => {
     if (!content.inputText.trim()) {
-      setError("Hey buddy, you need to add some content first, eh?");
+      setError("Please add some content first.");
       return;
     }
 
@@ -25,7 +25,7 @@ export const ScriptStudioNew: React.FC = () => {
       setScript(generated);
       setError(null);
     } catch (err: any) {
-      setError(getRandomCanadianPhrase('apologies') + " " + (err.message || 'Failed to generate script.'));
+      setError(getRandomPhrase('apologies') + " " + (err.message || 'Failed to generate script.'));
     } finally {
       setLoading({ script: false });
     }
@@ -106,7 +106,7 @@ export const ScriptStudioNew: React.FC = () => {
         <textarea
           value={content.script}
           onChange={(e) => setScript(e.target.value)}
-          placeholder="Your AI-generated script will appear here, or you can write your own, eh?"
+          placeholder="Your AI-generated script will appear here, or you can write your own."
           disabled={isGenerating}
           className="flex-1 w-full bg-gray-900/50 text-[#F5F5DC] rounded-lg p-4 border border-gray-600 focus:border-red-600 focus:outline-none resize-none disabled:opacity-50 font-sans text-sm leading-relaxed"
         />
@@ -118,7 +118,7 @@ export const ScriptStudioNew: React.FC = () => {
       {content.script.length > 0 && (
         <div className="mt-4 p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
           <p className="text-xs text-green-300">
-            <strong>✓ Script ready!</strong> Feel free to edit it, then move on to avatar and voice, buddy!
+            <strong>✓ Script ready!</strong> Feel free to edit it, then move on to avatar and voice.
           </p>
         </div>
       )}

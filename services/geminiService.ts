@@ -19,17 +19,12 @@ export const generateScript = async (
 ): Promise<string> => {
     const ai = getAiClient();
 
-    // Add Canadian personality for the Friendly Canadian tone
-    const canadianFlair = tone === "Friendly Canadian (Polite & Warm)"
-        ? "\n\nIMPORTANT: Add subtle Canadian personality with phrases like 'eh', occasional polite language, and warm friendly tone. Keep it professional but personable, don't you know!"
-        : "";
-
     const prompt = `
         Based on the following content, write a compelling and professional script for a 2-minute audio/video presentation.
         The script should be ready to be spoken. Do not include any headers, titles, or formatting like "**Script:**".
 
         The desired tone is: "${tone}".
-        The presentation style should be: "${style}".${canadianFlair}
+        The presentation style should be: "${style}".
 
         Here is the content:
         ---

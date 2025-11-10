@@ -4,7 +4,7 @@ import { AppMode, modeConfigs } from '../types';
 
 export const ModeSelector: React.FC = () => {
   const { setMode } = useApp();
-  const { hideModeSelector, getRandomCanadianPhrase } = useUI();
+  const { hideModeSelector, getRandomPhrase } = useUI();
 
   const handleModeSelect = (mode: AppMode) => {
     setMode(mode);
@@ -20,7 +20,7 @@ export const ModeSelector: React.FC = () => {
               Choose Your Mode, Buddy! 🎯
             </h2>
             <p className="text-xl text-gray-400">
-              {getRandomCanadianPhrase('greetings')} What would you like to create today?
+              {getRandomPhrase('greetings')} What would you like to create today?
             </p>
           </div>
 

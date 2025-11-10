@@ -8,7 +8,7 @@ interface AnimatedAvatarProps {
 }
 
 /**
- * Elegant Canadian South Park-style animation
+ * Elegant South Park-style animation
  * Simply splits the face in half at the mouth and animates the jaw
  * Much more authentic and performant!
  */

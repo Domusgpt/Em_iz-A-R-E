@@ -91,7 +91,7 @@ const AppContent: React.FC = () => {
   // Main generation function
   const handleGenerate = useCallback(async () => {
     if (!content.script.trim()) {
-      setError("Hey buddy, you need a script first, eh? Generate or write one!");
+      setError("Please generate or write a script first.");
       return;
     }
 
@@ -132,12 +132,12 @@ const AppContent: React.FC = () => {
 
       // Success message with Canadian flair
       setTimeout(() => {
-        alert(getRandomCanadianPhrase('success') + " Your presentation is ready!");
+        alert(getRandomPhrase('success') + " Your presentation is ready!");
       }, 500);
 
     } catch (err: any) {
       console.error("Generation error:", err);
-      setError(getRandomCanadianPhrase('apologies') + " " + (err.message || 'An unknown error occurred, buddy.'));
+      setError(getRandomPhrase('errors') + " " + (err.message || 'An unknown error occurred.'));
     } finally {
       setLoading({ script: false, audio: false, avatar: false });
     }
@@ -157,7 +157,7 @@ const AppContent: React.FC = () => {
                   🎬 TalkingHead Pro
                 </h1>
                 <span className="hidden md:inline-block px-3 py-1 bg-red-600/20 border border-red-600/50 rounded-full text-xs font-medium">
-                  Canadian Edition, eh? 🍁
+                  South Park Style 🍁
                 </span>
               </div>
               <button
@@ -239,7 +239,7 @@ const AppContent: React.FC = () => {
         <footer className="bg-gray-900/80 backdrop-blur border-t border-red-600/30 py-4">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col md:flex-row items-center justify-between text-sm text-gray-400">
-              <p>Made with ❤️ and maple syrup in Canada, eh? 🍁</p>
+              <p>Made with ❤️ for creators 🍁</p>
               <p>TalkingHead Pro © 2024 • Powered by AI</p>
             </div>
           </div>

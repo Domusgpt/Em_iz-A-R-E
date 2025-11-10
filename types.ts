@@ -15,6 +15,6 @@ export {
   ModeConfig,
   modeConfigs,
   ANIMATION_CONFIG,
-  CANADIAN_PHRASES,
+  UI_PHRASES,
   ExportOptions
 } from './types/index';

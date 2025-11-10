@@ -5,7 +5,7 @@ import { voices, VoiceOption } from '../types';
 export const VoiceAvatarPanel: React.FC = () => {
   const { content, setVoice } = useContent();
   const { avatar, setHeadshot } = useAvatar();
-  const { ui, setError, getRandomCanadianPhrase } = useUI();
+  const { ui, setError, getRandomPhrase } = useUI();
   const [imageForCropper, setImageForCropper] = React.useState<string | null>(null);
   const [videoStreamForCropper, setVideoStreamForCropper] = React.useState<MediaStream | null>(null);
   const [isCropperOpen, setIsCropperOpen] = React.useState(false);
@@ -18,7 +18,7 @@ export const VoiceAvatarPanel: React.FC = () => {
     if (!file) return;
 
     if (!file.type.startsWith('image/')) {
-      setError("Sorry buddy, that's not an image file, eh?");
+      setError("That's not an image file.");
       return;
     }
 
@@ -28,7 +28,7 @@ export const VoiceAvatarPanel: React.FC = () => {
       setImageForCropper(base64);
       setIsCropperOpen(true);
     };
-    reader.onerror = () => setError(getRandomCanadianPhrase('apologies') + " Couldn't read that image.");
+    reader.onerror = () => setError(getRandomPhrase('apologies') + " Couldn't read that image.");
     reader.readAsDataURL(file);
 
     if (fileInputRef.current) {
@@ -42,7 +42,7 @@ export const VoiceAvatarPanel: React.FC = () => {
       setVideoStreamForCropper(stream);
       setIsCropperOpen(true);
     } catch (err) {
-      setError("Sorry friend, couldn't access the camera. Please check permissions, eh?");
+      setError("Couldn't access the camera. Please check permissions.");
     }
   };
 
@@ -124,13 +124,13 @@ export const VoiceAvatarPanel: React.FC = () => {
               </button>
             </div>
             <p className="text-sm text-green-400 text-center">
-              ✓ Beauty! Avatar ready to go, eh?
+              ✓ Avatar ready!
             </p>
           </div>
         ) : (
           <div className="space-y-4">
             <p className="text-sm text-gray-400 mb-4">
-              Upload a photo to create your personalized South Park-style avatar, buddy!
+              Upload a photo to create your personalized South Park-style avatar.
             </p>
 
             <div className="grid grid-cols-2 gap-3">
@@ -163,7 +163,7 @@ export const VoiceAvatarPanel: React.FC = () => {
 
             <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
               <p className="text-xs text-blue-300">
-                <strong>💡 Tip:</strong> Use a clear, well-lit front-facing photo for best results, friend!
+                <strong>💡 Tip:</strong> Use a clear, well-lit front-facing photo for best results.
               </p>
             </div>
           </div>

@@ -5,7 +5,7 @@ import { modeConfigs } from '../types';
 export const ContentInput: React.FC = () => {
   const { settings } = useApp();
   const { content, setInputText } = useContent();
-  const { ui, setError, getRandomCanadianPhrase } = useUI();
+  const { ui, setError, getRandomPhrase } = useUI();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const config = modeConfigs[settings.mode];
@@ -20,16 +20,16 @@ export const ContentInput: React.FC = () => {
       reader.onload = (e) => {
         const text = e.target?.result as string;
         if (text.length > config.maxLength) {
-          setError(`Sorry buddy, that file's a bit too long, eh? Please keep it under ${config.maxLength} characters.`);
+          setError(`That file is too long. Please keep it under ${config.maxLength} characters.`);
         } else {
           setInputText(text);
           setError(null);
         }
       };
-      reader.onerror = () => setError(getRandomCanadianPhrase('apologies') + " Couldn't read that file.");
+      reader.onerror = () => setError(getRandomPhrase('apologies') + " Couldn't read that file.");
       reader.readAsText(file);
     } else {
-      setError("Oops! Please upload a .txt file, friend.");
+      setError("Please upload a .txt file.");
     }
 
     if (fileInputRef.current) {
@@ -49,7 +49,7 @@ export const ContentInput: React.FC = () => {
     const text = e.clipboardData.getData('text');
     if (text.length > config.maxLength) {
       e.preventDefault();
-      setError(`That's a bit long, eh? Please keep it under ${config.maxLength} characters, buddy.`);
+      setError(`That's too long. Please keep it under ${config.maxLength} characters.`);
     }
   };
 
@@ -65,7 +65,7 @@ export const ContentInput: React.FC = () => {
             <span className="text-2xl">{config.icon}</span>
             {config.name}
           </h2>
-          <p className="text-sm text-gray-400 mt-1">{config.canadianGreeting}</p>
+          <p className="text-sm text-gray-400 mt-1">{config.greeting}</p>
         </div>
         <button
           onClick={() => fileInputRef.current?.click()}
@@ -115,10 +115,10 @@ export const ContentInput: React.FC = () => {
         <div className="mt-4 p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
           <p className="text-xs text-blue-300">
             <strong>💡 Tip:</strong> {settings.mode === 'resume'
-              ? "Include key achievements and measurable results for the best script, eh?"
+              ? "Include key achievements and measurable results for the best script."
               : settings.mode === 'document'
-              ? "Break your content into clear sections for better flow, buddy!"
-              : "Keep it concise and highlight what makes you unique, friend!"}
+              ? "Break your content into clear sections for better flow."
+              : "Keep it concise and highlight what makes you unique."}
           </p>
         </div>
       )}
